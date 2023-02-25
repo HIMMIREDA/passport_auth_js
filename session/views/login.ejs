@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <h1>Login Page</h1>
+    <section>
+      <% errorMessages.forEach(function(message) { %>
+        <p style="color: red"><%= message %></p>
+      <% }); %>
+    </section>
+    <section>
+      <% infoMessages.forEach(function(message) { %>
+        <p style="color: green"><%= message %></p>
+      <% }); %>
+    </section>
+    <form method="POST" action="/login">
+      Enter Username:<br /><input type="text" name="username" /> <br />Enter
+      Password:<br /><input type="password" name="password" />
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <br /><br /><input type="submit" value="Submit" />
+    </form>
+    <a href="/register">Register</a>
+  </body>
+</html>
