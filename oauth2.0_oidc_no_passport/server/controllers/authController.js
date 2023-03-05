@@ -6,7 +6,6 @@ const bcrypt = require("bcrypt");
 
 const dataSource = require("../config/dataSource");
 const userEntity = require("../entities/userEntity");
-const User = require("../models/userModel");
 
 const { getGoogleOauthToken, verifyIdToken } = require("../utils/googleOauth");
 
@@ -18,9 +17,19 @@ const loginUser = asyncHandler(async (req, res, next) => {
     where: { email },
   });
 
-  if (!user || !bcrypt.compareSync(password, user.password)) {
+  if (!user) {
     res.status(401);
     return next(new Error("Unauthorized!"));
+  }
+
+  if (user.provider === "google") {
+    res.status(401);
+    return next(new Error(`Use ${user.provider} Oauth2 to login `));
+  }
+
+  if (!bcrypt.compareSync(password, user.password)) {
+    res.status(401);
+    return next(new Error("Password is wrong!"));
   }
 
   req.session.regenerate((err) => {
@@ -32,18 +41,24 @@ const loginUser = asyncHandler(async (req, res, next) => {
       if (err) return next(err);
       return res.status(200).json({
         id: user.id,
+        email: user.email,
+        username: user.username,
+        provider: user.provider,
+        photo:
+          user.provider === "local"
+            ? req.protocol + "://" + req.get("host") + "/static/" + user.photo
+            : user.photo,
       });
     });
   });
 });
 
 const logout = asyncHandler(async (req, res, next) => {
-  
   req.session.user = null;
   req.session.destroy((err) => {
     if (err) return next(err);
-      res.clearCookie("connect.sid");
-      return res.sendStatus(200);
+    res.clearCookie("connect.sid");
+    return res.sendStatus(200);
   });
 });
 
@@ -83,7 +98,7 @@ const googleOauthHandler = asyncHandler(async (req, res, next) => {
   req.session.regenerate((err) => {
     if (err) return next(err);
     req.session.user = {
-      id: savedUser.raw.id,
+      id: savedUser.identifiers[0].id,
     };
 
     req.session.save((err) => {
@@ -96,5 +111,5 @@ const googleOauthHandler = asyncHandler(async (req, res, next) => {
 module.exports = {
   googleOauthHandler,
   loginUser,
-  logout
+  logout,
 };

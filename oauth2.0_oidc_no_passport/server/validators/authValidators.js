@@ -20,7 +20,7 @@ const registerBodyValidator = (body) => {
 const loginBodyValidator = (body) => {
   const schema = joi.object({
     email: joi.string().email().required().label("email"),
-    password: passComplexity().required().label("password"),
+    password: joi.required().label("password"),
   });
 
   return schema.validate(body);
